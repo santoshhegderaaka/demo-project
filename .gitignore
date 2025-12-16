@@ -1,0 +1,71 @@
+# =========================
+# Node.js dependencies
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Build output
+# =========================
+dist/
+build/
+out/
+
+# =========================
+# Test & Coverage Reports
+# =========================
+coverage/
+reports/
+junit.xml
+
+# =========================
+# Jenkins
+# =========================
+.jenkins/
+jenkins_home/
+workspace/
+**/workspace/
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Editor / IDE
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Temporary files
+# =========================
+tmp/
+temp/
+.cache/
+
+# =========================
+# Misc
+# =========================
+*.tgz
+*.pid
