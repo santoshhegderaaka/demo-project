@@ -24,7 +24,7 @@ pipeline {
                 expression { fileExists('scripts/generate-spec-tests.sh') }
             }
             steps {
-                sh './scripts/generate-spec-tests.sh'
+               sh 'bash scripts/generate-spec-tests.sh'
             }
         }
 
