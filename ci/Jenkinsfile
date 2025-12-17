@@ -76,7 +76,8 @@ pipeline {
             }
             steps {
                  withCredentials([
-            string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')
+            string(credentialsId: 'github-copilot-token', variable: 'COPILOT_TOKEN'),
+            string(credentialsId: 'github-push-token', variable: 'PUSH_TOKEN')
         ]){
                 sh '''
                   export NVM_DIR="$HOME/.nvm"
