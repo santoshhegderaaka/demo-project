@@ -12,12 +12,16 @@ pipeline {
                 checkout scm
             }
         }
-
-        stage('Install Dependencies') {
-            steps {
-                sh 'npm ci'
-            }
-        }
+stage('Install Dependencies') {
+    steps {
+        sh '''
+          node -v
+          npm -v
+          npm install -g @github/copilot
+          copilot --version || true
+        '''
+    }
+}
 
         stage('Generate Unit Tests using AI Copilot') {
             when {
