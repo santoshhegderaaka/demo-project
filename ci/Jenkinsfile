@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         CI = "true"
+        NVM_DIR = "${env.HOME}/.nvm"
+        NODE_VERSION = "22"
     }
 
     stages {
@@ -13,12 +15,35 @@ pipeline {
             }
         }
 
-        stage('Use Node v22') {
+        stage('Install nvm (if not exists)') {
+            steps {
+                sh '''
+                  set -e
+
+                  if [ ! -d "$NVM_DIR" ]; then
+                    echo "Installing nvm..."
+                    curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+                  else
+                    echo "nvm already installed"
+                  fi
+
+                  export NVM_DIR="$HOME/.nvm"
+                  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+                  nvm --version
+                '''
+            }
+        }
+
+        stage('Install & Use Node v22') {
             steps {
                 sh '''
                   export NVM_DIR="$HOME/.nvm"
-                  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-                  nvm use 22
+                  . "$NVM_DIR/nvm.sh"
+
+                  nvm install ${NODE_VERSION}
+                  nvm use ${NODE_VERSION}
+
                   node -v
                   npm -v
                 '''
@@ -30,9 +55,23 @@ pipeline {
                 sh '''
                   export NVM_DIR="$HOME/.nvm"
                   . "$NVM_DIR/nvm.sh"
-                  nvm use 22
-                 npm install -g @github/copilot
+                  nvm use ${NODE_VERSION}
+
+                  npm install -g @github/copilot
           copilot --version || true
+                '''
+            }
+        }
+
+        stage('Install Copilot CLI (Optional)') {
+            steps {
+                sh '''
+                  export NVM_DIR="$HOME/.nvm"
+                  . "$NVM_DIR/nvm.sh"
+                  nvm use ${NODE_VERSION}
+
+                  npm install -g @github/copilot || true
+                  copilot --version || true
                 '''
             }
         }
@@ -42,7 +81,8 @@ pipeline {
                 sh '''
                   export NVM_DIR="$HOME/.nvm"
                   . "$NVM_DIR/nvm.sh"
-                  nvm use 22
+                  nvm use ${NODE_VERSION}
+
                   npm test -- --coverage
                 '''
             }
