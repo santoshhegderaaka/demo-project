@@ -90,6 +90,7 @@ pipeline {
               echo "Fixing permissions..."
               chown -R $(whoami):$(whoami) . || true
               chmod -R u+rwX . || true
+              chmod +x node_modules/.bin/* || true
 
               chmod +x scripts/generate-spec-tests.sh
               bash scripts/generate-spec-tests.sh "\$COPILOT_TOKEN" "\$PUSH_TOKEN"
@@ -110,6 +111,7 @@ pipeline {
 
           chown -R $(whoami):$(whoami) . || true
           chmod -R u+rwX . || true
+          chmod +x node_modules/.bin/* || true
 
           npm test -- --coverage || npx jest --coverage
         '''
