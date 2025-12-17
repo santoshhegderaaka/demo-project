@@ -89,6 +89,10 @@ echo "Checking for git changes..."
 if [ -n "$(git status --porcelain)" ]; then
   echo "Changes detected. Committing..."
 
+  # Set git identity for Jenkins
+  git config user.name "jenkins-bot"
+  git config user.email "jenkins@local"
+
   git add test/
   git commit -m "test: auto-generate Jest spec files using Copilot"
 
