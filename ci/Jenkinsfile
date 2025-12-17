@@ -69,38 +69,47 @@ pipeline {
             }
         }
 
-        /* 👇 THIS IS THE MISSING PIECE */
         stage('Generate Unit Tests (.spec.js)') {
             when {
                 expression { fileExists('scripts/generate-spec-tests.sh') }
             }
             steps {
-                 withCredentials([
-            string(credentialsId: 'github-copilot-token', variable: 'COPILOT_TOKEN'),
-            string(credentialsId: 'github-push-token', variable: 'PUSH_TOKEN')
-        ]){
-                sh '''
-                  export NVM_DIR="$HOME/.nvm"
-                  . "$NVM_DIR/nvm.sh"
-                  nvm use ${NODE_VERSION}
+                withCredentials([
+                    string(credentialsId: 'github-copilot-token', variable: 'COPILOT_TOKEN'),
+                    string(credentialsId: 'github-push-token', variable: 'PUSH_TOKEN')
+                ]) {
+                    sh '''
+                      export HOME=$WORKSPACE
+                      export NVM_DIR="$HOME/.nvm"
+                      . "$NVM_DIR/nvm.sh"
+                      nvm use ${NODE_VERSION}
 
-                  echo "Running test generation script..."
-                  chmod +x scripts/generate-spec-tests.sh
-                  bash scripts/generate-spec-tests.sh "\$COPILOT_TOKEN" "\$PUSH_TOKEN"
+                      echo "Fixing permissions before test generation..."
+                      chown -R $(whoami):$(whoami) . || true
+                      chmod -R u+rwX . || true
 
-                  echo "Generated test files:"
-                  find tests -name "*.spec.js" || true
-                '''
-            }
+                      echo "Running test generation script..."
+                      chmod +x scripts/generate-spec-tests.sh
+                      bash scripts/generate-spec-tests.sh "\$COPILOT_TOKEN" "\$PUSH_TOKEN"
+
+                      echo "Generated test files:"
+                      find test -name "*.spec.js" || true
+                    '''
+                }
             }
         }
 
         stage('Run Tests & Coverage') {
             steps {
                 sh '''
+                  export HOME=$WORKSPACE
                   export NVM_DIR="$HOME/.nvm"
                   . "$NVM_DIR/nvm.sh"
                   nvm use ${NODE_VERSION}
+
+                  echo "Fixing permissions before running tests..."
+                  chown -R $(whoami):$(whoami) . || true
+                  chmod -R u+rwX . || true
 
                   npm test -- --coverage || npx jest --coverage
                 '''
