@@ -12,36 +12,45 @@ pipeline {
                 checkout scm
             }
         }
-stage('Install Dependencies') {
-    steps {
-        sh '''
-          node -v
-          npm -v
-          npm install -g @github/copilot
-          copilot --version || true
-        '''
-    }
-}
 
-        stage('Generate Unit Tests using AI Copilot') {
-            when {
-                expression { fileExists('scripts/generate-spec-tests.sh') }
-            }
+        stage('Use Node v22') {
             steps {
-               sh 'bash scripts/generate-spec-tests.sh'
+                sh '''
+                  export NVM_DIR="$HOME/.nvm"
+                  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+                  nvm use 22
+                  node -v
+                  npm -v
+                '''
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                  export NVM_DIR="$HOME/.nvm"
+                  . "$NVM_DIR/nvm.sh"
+                  nvm use 22
+                 npm install -g @github/copilot
+          copilot --version || true
+                '''
             }
         }
 
         stage('Run Tests & Coverage') {
             steps {
-                sh 'npm test -- --coverage'
+                sh '''
+                  export NVM_DIR="$HOME/.nvm"
+                  . "$NVM_DIR/nvm.sh"
+                  nvm use 22
+                  npm test -- --coverage
+                '''
             }
         }
 
         stage('Publish Reports') {
             steps {
                 junit allowEmptyResults: true, testResults: '**/junit*.xml'
-
                 publishHTML([
                     reportName: 'Jest Coverage Report',
                     reportDir: 'coverage/lcov-report',
@@ -57,12 +66,6 @@ stage('Install Dependencies') {
     post {
         always {
             cleanWs()
-        }
-        success {
-            echo 'Build successful'
-        }
-        failure {
-            echo 'Build failed'
         }
     }
 }
