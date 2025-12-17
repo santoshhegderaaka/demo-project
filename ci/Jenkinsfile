@@ -57,10 +57,8 @@ pipeline {
                   . "$NVM_DIR/nvm.sh"
                   nvm use ${NODE_VERSION}
 
-                  # Install dependencies from package-lock.json
                   npm ci
 
-                  # Ensure Jest exists (install only if missing)
                   if ! npx jest --version > /dev/null 2>&1; then
                     echo "Installing Jest..."
                     npm install --save-dev jest
@@ -71,15 +69,23 @@ pipeline {
             }
         }
 
-        stage('Install Copilot CLI (Optional)') {
+        /* 👇 THIS IS THE MISSING PIECE */
+        stage('Generate Unit Tests (.spec.js)') {
+            when {
+                expression { fileExists('scripts/generate-spec-tests.sh') }
+            }
             steps {
                 sh '''
                   export NVM_DIR="$HOME/.nvm"
                   . "$NVM_DIR/nvm.sh"
                   nvm use ${NODE_VERSION}
 
-                  npm install -g @github/copilot || true
-                  copilot --version || true
+                  echo "Running test generation script..."
+                  chmod +x scripts/generate-spec-tests.sh
+                  bash scripts/generate-spec-tests.sh
+
+                  echo "Generated test files:"
+                  find tests -name "*.spec.js" || true
                 '''
             }
         }
