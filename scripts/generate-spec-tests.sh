@@ -39,9 +39,9 @@ echo "Generating Jest .spec.js files using GitHub Copilot..."
 
 mkdir -p "$TEST_DIR"
 
-# --- Generate tests -----------------------------------------------------------
+# --- Generate tests (FIXED LOOP) ---------------------------------------------
 
-find "$SRC_DIR" -type f -name "*.js" ! -name "*.spec.js" | while read -r srcFile; do
+while read -r srcFile; do
 
   specFile=$(echo "$srcFile" \
     | sed "s|^$SRC_DIR|$TEST_DIR|" \
@@ -73,7 +73,7 @@ $(cat "$srcFile")
 
   GENERATED_COUNT=$((GENERATED_COUNT + 1))
 
-done
+done < <(find "$SRC_DIR" -type f -name "*.js" ! -name "*.spec.js")
 
 # --- Git commit & push --------------------------------------------------------
 
