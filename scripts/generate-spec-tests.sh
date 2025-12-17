@@ -4,16 +4,21 @@ set -e
 # -----------------------------
 # Preconditions
 # -----------------------------
-if [ -z "$1" ]; then
-  echo "GitHub token not provided"
-  echo "Usage: ./generate-spec-tests-copilot.sh <GITHUB_TOKEN>"
+if [ -z "$1" ] || [ -z "$2" ]; then
+  echo "Tokens not provided"
+  echo "Usage: ./generate-spec-tests-copilot.sh <COPILOT_TOKEN> <PUSH_TOKEN>"
   exit 1
 fi
 
+COPILOT_TOKEN="$1"
+PUSH_TOKEN="$2"
+
 # -----------------------------
-# GitHub Auth
+# Login using $1 (Copilot / Read)
 # -----------------------------
-echo "$1" | gh auth login --with-token
+echo "Logging in with Copilot token..."
+gh auth logout -h github.com -y || true
+echo "$COPILOT_TOKEN" | gh auth login --with-token
 gh auth status
 
 # -----------------------------
@@ -65,6 +70,18 @@ done
 echo "Test generation attempt completed"
 
 # -----------------------------
+# Switch auth → login using $2 (Push)
+# -----------------------------
+echo "Switching GitHub auth for push..."
+
+gh auth logout -h github.com -y || true
+echo "$PUSH_TOKEN" | gh auth login --with-token
+gh auth status
+
+# CRITICAL: force git to use this token
+gh auth setup-git
+
+# -----------------------------
 # Git commit & push
 # -----------------------------
 echo "Checking for git changes..."
@@ -73,7 +90,6 @@ if [ -n "$(git status --porcelain)" ]; then
   echo "Changes detected. Committing..."
 
   git add test/
-
   git commit -m "test: auto-generate Jest spec files using Copilot"
 
   CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -85,5 +101,3 @@ if [ -n "$(git status --porcelain)" ]; then
 else
   echo "No changes to commit"
 fi
-
-
