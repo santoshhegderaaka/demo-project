@@ -1,77 +1,64 @@
-/* eslint-env jest */
+// Mocks express and the product routes, then requires the app to assert wiring
+jest.mock('express', () => {
+  const json = jest.fn(() => 'json-middleware');
+  const app = {
+    use: jest.fn(),
+    get: jest.fn((path, handler) => {
+      if (path === '/health') {
+        app._healthHandler = handler;
+      }
+    }),
+    listen: jest.fn((port, cb) => cb && cb()),
+  };
+  const express = jest.fn(() => app);
+  express.json = json;
+  return express;
+});
+
+jest.mock('../src/routes/product.routes', () => 'PRODUCT_ROUTES');
 
 describe('src/app.js', () => {
+  let app;
+  let expressMock;
+
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    // require the mocked express and the app after mocks are in place
+    expressMock = require('express');
+    app = require('../src/app');
   });
 
-  it('initializes express, registers middleware and routes, and starts listening', () => {
-    jest.resetModules();
+  afterEach(() => {
+    if (console.log.mockRestore) console.log.mockRestore();
+  });
 
-    const productRoutesMock = 'PRODUCT_ROUTES_MOCK';
-    jest.mock('../src/routes/product.routes', () => productRoutesMock);
-
-    jest.mock('express', () => {
-      const use = jest.fn();
-      const handlers = {};
-      const app = {
-        use,
-        get: (path, handler) => { handlers[path] = handler; },
-        listen: jest.fn((port, cb) => cb && cb()),
-        _handlers: handlers,
-      };
-      const express = jest.fn(() => app);
-      express.json = jest.fn(() => 'json-middleware');
-      return express;
-    });
-
-    const express = require('express');
-    const app = require('../src/app');
-
-    // app should be the mocked app returned by our express mock
-    expect(typeof app).toBe('object');
-
-    // express() was called to create the app and express.json() was used
-    expect(express).toHaveBeenCalled();
-    expect(express.json).toHaveBeenCalled();
-
-    // json middleware and product routes were registered
+  it('uses express.json() middleware', () => {
+    expect(expressMock.json).toHaveBeenCalled();
     expect(app.use).toHaveBeenCalledWith('json-middleware');
-    expect(app.use).toHaveBeenCalledWith('/api/products', productRoutesMock);
-
-    // listen was invoked (callback executed)
-    expect(app.listen).toHaveBeenCalled();
   });
 
-  it('registers a /health route that responds with status UP', () => {
-    jest.resetModules();
+  it('mounts product routes on /api/products', () => {
+    expect(app.use).toHaveBeenCalledWith('/api/products', 'PRODUCT_ROUTES');
+  });
 
-    jest.mock('../src/routes/product.routes', () => 'PRODUCT_ROUTES_MOCK');
-
-    jest.mock('express', () => {
-      const use = jest.fn();
-      const handlers = {};
-      const app = {
-        use,
-        get: (path, handler) => { handlers[path] = handler; },
-        listen: jest.fn((port, cb) => cb && cb()),
-        _handlers: handlers,
-      };
-      const express = jest.fn(() => app);
-      express.json = jest.fn(() => 'json-middleware');
-      return express;
-    });
-
-    const app = require('../src/app');
-
-    const handler = app._handlers && app._handlers['/health'];
+  it('registers a /health GET handler that returns status UP', () => {
+    // handler was captured by the mocked get method
+    const handler = app._healthHandler;
     expect(typeof handler).toBe('function');
 
+    const req = {};
     const res = { status: jest.fn(() => res), json: jest.fn() };
-    handler({}, res);
+
+    handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith({ status: 'UP' });
+  });
+
+  it('starts listening on port 3000 and logs a message', () => {
+    expect(app.listen).toHaveBeenCalledWith(3000, expect.any(Function));
+    expect(console.log).toHaveBeenCalledWith(expect.stringContaining('E-commerce API running on port 3000'));
   });
 });
