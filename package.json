@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/santoshhegderaaka/demo-project#readme",
   "dependencies": {
+    "@github/copilot": "^0.0.369",
     "express": "^4.19.2"
   },
   "devDependencies": {

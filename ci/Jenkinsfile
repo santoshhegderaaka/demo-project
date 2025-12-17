@@ -75,6 +75,9 @@ pipeline {
                 expression { fileExists('scripts/generate-spec-tests.sh') }
             }
             steps {
+                 withCredentials([
+            string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')
+        ]){
                 sh '''
                   export NVM_DIR="$HOME/.nvm"
                   . "$NVM_DIR/nvm.sh"
@@ -87,6 +90,7 @@ pipeline {
                   echo "Generated test files:"
                   find tests -name "*.spec.js" || true
                 '''
+            }
             }
         }
 
