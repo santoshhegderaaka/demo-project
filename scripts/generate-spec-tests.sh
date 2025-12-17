@@ -1,5 +1,26 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
+
+# ---------------------------------------------------------
+# GitHub Copilot test generation (LOCAL ONLY)
+# Jenkins / CI will skip this script automatically
+# ---------------------------------------------------------
+
+if [ "$CI" = "true" ]; then
+  echo "CI environment detected. Skipping Copilot test generation."
+  exit 0
+fi
+
+if ! command -v gh >/dev/null 2>&1; then
+  echo "GitHub CLI (gh) not found. Please install gh."
+  exit 1
+fi
+
+if ! gh copilot --help >/dev/null 2>&1; then
+  echo "GitHub Copilot CLI not installed."
+  echo "Run: gh extension install github/gh-copilot"
+  exit 1
+fi
 
 echo "Generating Jest .spec.js files using GitHub Copilot..."
 
@@ -43,4 +64,4 @@ $(cat "$srcFile")
 
 done
 
-echo "AI test generation completed"
+echo "AI test generation completed successfully."
