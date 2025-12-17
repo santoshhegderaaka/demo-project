@@ -70,51 +70,51 @@ pipeline {
         }
 
         stage('Generate Unit Tests (.spec.js)') {
-            when {
-                expression { fileExists('scripts/generate-spec-tests.sh') }
-            }
-            steps {
-                withCredentials([
-                    string(credentialsId: 'github-copilot-token', variable: 'COPILOT_TOKEN'),
-                    string(credentialsId: 'github-push-token', variable: 'PUSH_TOKEN')
-                ]) {
-                    sh '''
-                      export HOME=$WORKSPACE
-                      export NVM_DIR="$HOME/.nvm"
-                      . "$NVM_DIR/nvm.sh"
-                      nvm use ${NODE_VERSION}
+    when {
+        expression { fileExists('scripts/generate-spec-tests.sh') }
+    }
+    steps {
+        withCredentials([
+            string(credentialsId: 'github-copilot-token', variable: 'COPILOT_TOKEN'),
+            string(credentialsId: 'github-push-token', variable: 'PUSH_TOKEN')
+        ]) {
+            sh '''
+              # Keep nvm in Jenkins home
+              export NVM_DIR="/var/lib/jenkins/.nvm"
+              . "$NVM_DIR/nvm.sh"
+              nvm use ${NODE_VERSION}
 
-                      echo "Fixing permissions before test generation..."
-                      chown -R $(whoami):$(whoami) . || true
-                      chmod -R u+rwX . || true
+              # Only HOME is workspace (for npm/jest)
+              export HOME=$WORKSPACE
 
-                      echo "Running test generation script..."
-                      chmod +x scripts/generate-spec-tests.sh
-                      bash scripts/generate-spec-tests.sh "\$COPILOT_TOKEN" "\$PUSH_TOKEN"
+              echo "Fixing permissions..."
+              chown -R $(whoami):$(whoami) . || true
+              chmod -R u+rwX . || true
 
-                      echo "Generated test files:"
-                      find test -name "*.spec.js" || true
-                    '''
-                }
-            }
+              chmod +x scripts/generate-spec-tests.sh
+              bash scripts/generate-spec-tests.sh "\$COPILOT_TOKEN" "\$PUSH_TOKEN"
+            '''
         }
+    }
+}
+
 
         stage('Run Tests & Coverage') {
-            steps {
-                sh '''
-                  export HOME=$WORKSPACE
-                  export NVM_DIR="$HOME/.nvm"
-                  . "$NVM_DIR/nvm.sh"
-                  nvm use ${NODE_VERSION}
+    steps {
+        sh '''
+          export NVM_DIR="/var/lib/jenkins/.nvm"
+          . "$NVM_DIR/nvm.sh"
+          nvm use ${NODE_VERSION}
 
-                  echo "Fixing permissions before running tests..."
-                  chown -R $(whoami):$(whoami) . || true
-                  chmod -R u+rwX . || true
+          export HOME=$WORKSPACE
 
-                  npm test -- --coverage || npx jest --coverage
-                '''
-            }
-        }
+          chown -R $(whoami):$(whoami) . || true
+          chmod -R u+rwX . || true
+
+          npm test -- --coverage || npx jest --coverage
+        '''
+    }
+}
 
         stage('Publish Reports') {
             steps {
