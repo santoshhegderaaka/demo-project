@@ -86,7 +86,7 @@ pipeline {
 
                   echo "Running test generation script..."
                   chmod +x scripts/generate-spec-tests.sh
-                  bash scripts/generate-spec-tests.sh
+                  bash scripts/generate-spec-tests.sh "\$COPILOT_TOKEN" "\$PUSH_TOKEN"
 
                   echo "Generated test files:"
                   find tests -name "*.spec.js" || true
