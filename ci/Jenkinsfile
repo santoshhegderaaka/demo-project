@@ -70,53 +70,54 @@ pipeline {
         }
 
         stage('Generate Unit Tests (.spec.js)') {
-    when {
-        expression { fileExists('scripts/generate-spec-tests.sh') }
-    }
-    steps {
-        withCredentials([
-            string(credentialsId: 'github-copilot-token', variable: 'COPILOT_TOKEN'),
-            string(credentialsId: 'github-push-token', variable: 'PUSH_TOKEN')
-        ]) {
-            sh '''
-              # Keep nvm in Jenkins home
-              export NVM_DIR="/var/lib/jenkins/.nvm"
-              . "$NVM_DIR/nvm.sh"
-              nvm use ${NODE_VERSION}
+            when {
+                expression { fileExists('scripts/generate-spec-tests.sh') }
+            }
+            steps {
+                withCredentials([
+                    string(credentialsId: 'github-copilot-token', variable: 'COPILOT_TOKEN'),
+                    string(credentialsId: 'github-push-token', variable: 'PUSH_TOKEN')
+                ]) {
+                    sh '''
+                      export NVM_DIR="/var/lib/jenkins/.nvm"
+                      . "$NVM_DIR/nvm.sh"
+                      nvm use ${NODE_VERSION}
 
-              # Only HOME is workspace (for npm/jest)
-              export HOME=$WORKSPACE
+                      #FIX: keep real HOME, move npm cache only
+                      export HOME=/var/lib/jenkins
+                      export npm_config_cache=$WORKSPACE/.npm
 
-              echo "Fixing permissions..."
-              chown -R $(whoami):$(whoami) . || true
-              chmod -R u+rwX . || true
-              chmod +x node_modules/.bin/* || true
+                      echo "Fixing permissions..."
+                      chown -R $(whoami):$(whoami) . || true
+                      chmod -R u+rwX . || true
+                      chmod +x node_modules/.bin/* || true
 
-              chmod +x scripts/generate-spec-tests.sh
-              bash scripts/generate-spec-tests.sh "\$COPILOT_TOKEN" "\$PUSH_TOKEN"
-            '''
+                      chmod +x scripts/generate-spec-tests.sh
+                      bash scripts/generate-spec-tests.sh "\$COPILOT_TOKEN" "\$PUSH_TOKEN"
+                    '''
+                }
+            }
         }
-    }
-}
-
 
         stage('Run Tests & Coverage') {
-    steps {
-        sh '''
-          export NVM_DIR="/var/lib/jenkins/.nvm"
-          . "$NVM_DIR/nvm.sh"
-          nvm use ${NODE_VERSION}
+            steps {
+                sh '''
+                  export NVM_DIR="/var/lib/jenkins/.nvm"
+                  . "$NVM_DIR/nvm.sh"
+                  nvm use ${NODE_VERSION}
 
-          export HOME=$WORKSPACE
+                  #FIX: keep real HOME, move npm cache only
+                  export HOME=/var/lib/jenkins
+                  export npm_config_cache=$WORKSPACE/.npm
 
-          chown -R $(whoami):$(whoami) . || true
-          chmod -R u+rwX . || true
-          chmod +x node_modules/.bin/* || true
+                  chown -R $(whoami):$(whoami) . || true
+                  chmod -R u+rwX . || true
+                  chmod +x node_modules/.bin/* || true
 
-          npm test -- --coverage || npx jest --coverage
-        '''
-    }
-}
+                  npm test -- --coverage || npx jest --coverage
+                '''
+            }
+        }
 
         stage('Publish Reports') {
             steps {
