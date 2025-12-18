@@ -132,6 +132,42 @@ pipeline {
                 ])
             }
         }
+
+                stage('Deploy (Local)') {
+            steps {
+                sh '''
+                  echo "Deploying application locally..."
+
+                  DEPLOY_DIR=/opt/apps/demo-project
+
+                  mkdir -p $DEPLOY_DIR
+
+                  rsync -av --delete \
+                    --exclude=node_modules \
+                    --exclude=.git \
+                    --exclude=coverage \
+                    ./ $DEPLOY_DIR/
+
+                  cd $DEPLOY_DIR
+
+                  export NVM_DIR="/var/lib/jenkins/.nvm"
+                  . "$NVM_DIR/nvm.sh"
+                  nvm use ${NODE_VERSION}
+
+                  npm ci --omit=dev
+
+                  echo "Stopping existing app (if any)..."
+                  pkill -f "node.*demo-project" || true
+                  pkill -f "npm start" || true
+
+                  echo "Starting app with npm start..."
+                  nohup npm start > app.log 2>&1 &
+
+                  echo "App deployed and started successfully"
+                '''
+            }
+        }
+
     }
 
    /* post {
