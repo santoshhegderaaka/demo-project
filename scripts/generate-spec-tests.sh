@@ -58,13 +58,15 @@ Target test file: $TEST_FILE
 
 Task:
 - Generate Jest unit tests
-- Mock all external dependencies
+- Write tests to $TEST_FILE
+- Mock external calls
 - Do not modify production code
-- Write tests directly to the target test file
-- Use describe/it blocks
-- Ensure tests are runnable via 'npm test'
-" --allow-tool write || echo "Copilot failed for $FILE"
-
+- Write files directly to disk
+- Project architecture:
+  - No controllers layer
+  - Routes call services directly
+  - Do NOT assume MVC structure
+" --allow-tool write
 done
 
 echo "Test generation attempt completed"
