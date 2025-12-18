@@ -66,8 +66,15 @@ Task:
   - No controllers layer
   - Routes call services directly
   - Do NOT assume MVC structure
+- Follow Jest hoisting rules
+- Do not reference out-of-scope variables inside jest.mock()
+- Prefer inline mock factories
 " --allow-tool write
 done
 
 echo "Test generation attempt completed"
+
+
+
+
 
