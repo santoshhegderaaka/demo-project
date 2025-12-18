@@ -133,12 +133,12 @@ pipeline {
             }
         }
 
-                stage('Deploy (Local)') {
+                       stage('Deploy (Local)') {
             steps {
                 sh '''
                   echo "Deploying application locally..."
 
-                  DEPLOY_DIR=/opt/apps/demo-project
+                  DEPLOY_DIR=/var/lib/jenkins/apps/demo-project
 
                   mkdir -p $DEPLOY_DIR
 
@@ -167,6 +167,7 @@ pipeline {
                 '''
             }
         }
+
 
     }
 
