@@ -69,39 +69,3 @@ done
 
 echo "Test generation attempt completed"
 
-# -----------------------------
-# Switch auth → login using $2 (Push)
-# -----------------------------
-echo "Switching GitHub auth for push..."
-
-gh auth logout -h github.com -y || true
-echo "$PUSH_TOKEN" | gh auth login --with-token
-gh auth status
-
-# CRITICAL: force git to use this token
-gh auth setup-git
-
-# -----------------------------
-# Git commit & push
-# -----------------------------
-echo "Checking for git changes..."
-
-if [ -n "$(git status --porcelain)" ]; then
-  echo "Changes detected. Committing..."
-
-  # Set git identity for Jenkins
-  git config user.name "jenkins-bot"
-  git config user.email "jenkins@local"
-
-  git add test/
-  git commit -m "test: auto-generate Jest spec files using Copilot"
-
-  CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-  echo "Pushing to branch: $CURRENT_BRANCH"
-
-  git push origin "$CURRENT_BRANCH"
-
-  echo "Changes committed and pushed successfully"
-else
-  echo "No changes to commit"
-fi
