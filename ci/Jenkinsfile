@@ -113,7 +113,7 @@ pipeline {
           chmod -R u+rwX . || true
           chmod +x node_modules/.bin/* || true
 
-          node ./node_modules/jest/bin/jest.js --coverage || true
+          npm test -- --coverage || npx jest --coverage
         '''
     }
 }
